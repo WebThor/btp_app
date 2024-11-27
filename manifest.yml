@@ -1,0 +1,33 @@
+applications:
+# Application
+- name: product-list
+  instances: 1
+  memory: 128M
+  random-route: true
+  routes:
+    - route: backendGroupxx.cfapps.us10-001.hana.ondemand.com
+  path: ./
+  buildpacks:
+    - nodejs_buildpack  
+  timeout: 180
+  services:
+    - xsuaa-service-tutorial
+
+# Application Router
+- name: approuter
+  random-route: true
+  routes:
+    - route: frontendGroupxx.cfapps.us10-001.hana.ondemand.com
+  path: ./approuter
+  buildpacks:
+    - nodejs_buildpack
+  memory: 128M
+  services:
+    - xsuaa-service-tutorial
+  env:
+    destinations: >
+      [
+        {"name":"products-destination",
+         "url":"https://backendGroupxx.cfapps.us10-001.hana.ondemand.com",
+         "forwardAuthToken": true}
+      ]

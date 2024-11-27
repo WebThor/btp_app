@@ -1,0 +1,91 @@
+{
+	"xsappname": "product-list",
+	"tenant-mode": "dedicated",
+	"scopes": [
+	  {
+		"name": "$XSAPPNAME.read",
+		"description": "With this scope, USER can read products."
+	  },
+	  {
+		"name": "$XSAPPNAME.edit",
+		"description": "With this scope, USER can edit the website."
+	  },
+	  {
+		"name": "$XSAPPNAME.admin",
+		"description": "With this scope, ADMIN can manage the application."
+	  },
+	  {
+		"name": "$XSAPPNAME.guest",
+		"description": "With this scope, GUEST can view public data."
+	  }
+	],
+	"role-templates": [
+	  {
+		"name": "Viewer",
+		"description": "Role to get the list of products",
+		"scope-references": [
+		  "$XSAPPNAME.read"
+		]
+	  },
+	  {
+		"name": "Editor",
+		"description": "Role to edit the website",
+		"scope-references": [
+		  "$XSAPPNAME.edit"
+		]
+	  },
+	  {
+		"name": "DeathStar",
+		"description": "Be the eval :-)",
+		"scope-references": [
+		  "$XSAPPNAME.read",
+		  "$XSAPPNAME.edit",
+		  "$XSAPPNAME.admin"
+		]
+	  },
+	  {
+		"name": "Alderaan",
+		"description": "Role for only viewing the evil",
+		"scope-references": [
+		  "$XSAPPNAME.guest"
+		]
+	  }
+	],
+	"role-collections": [
+	  {
+		"name": "ProductListViewer",
+		"description": "Product List Viewer",
+		"role-template-references": [
+		  "$XSAPPNAME.Viewer"
+		]
+	  },
+	  {
+		"name": "ProductListEditor",
+		"description": "Product List Editor",
+		"role-template-references": [
+		  "$XSAPPNAME.Editor"
+		]
+	  },
+	  {
+		"name": "Imperator",
+		"description": "Product List imperator",
+		"role-template-references": [
+		  "$XSAPPNAME.DeathStar"
+		]
+	  },
+	  {
+		"name": "AlderaanEmployee",
+		"description": "See the evil",
+		"role-template-references": [
+		  "$XSAPPNAME.Alderaan"
+		]
+	  }
+	],
+  "oauth2-configuration": 
+    {  
+      "redirect-uris": ["https://*.cfapps.us10-001.hana.ondemand.com/**"]       
+      }
+}
+
+
+
