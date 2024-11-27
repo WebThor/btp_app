@@ -1,18 +1,7 @@
 
 
-1. Create an SAP Account as described here: Please note that you have to use your university email address and a phone number to which you have access, you will need it later on. https://developers.sap.com/tutorials/hcp-create-trial-account..html
-
-2. As soon as you login the first time to the SAP BTP Trail account, it asks you where you would like to deploy your instance. Select USA (AWS) here. 
 
 
-1. Clone this repo
-
-2. cd product-list/myapp
-
-3. Perform cf login https://api.cf.us10-001.hana.ondemand.com
-
-
-4. LogIn with your SAP Universal ID credentials
 
 5. cf create-service xsuaa application xsuaa-service-tutorial -c ./security/xs-security.json
 
