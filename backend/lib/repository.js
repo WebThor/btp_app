@@ -32,6 +32,28 @@ function getProducts(req, res) {
     }
 }
 
+function addProduct(req, res) {
+    try {
+        const newProduct = req.body;
+
+        if (!newProduct.name || !newProduct.description || !newProduct.price) {
+            return res.status(400).send({ message: "Invalid product data. 'name', 'description', and 'price' are required." });
+        }
+
+        // Add product to the repository
+        repository[newProduct.name] = {
+            ...newProduct,
+            pictureUrl: newProduct.pictureUrl || "/resources/images/default.jpg" // Default image if not provided
+        };
+
+        res.status(201).send({ message: "Product added successfully", product: newProduct });
+    } catch (error) {
+        console.error("Error in addProduct:", error);
+        res.status(500).send({ message: "Internal Server Error" });
+    }
+}
+
+
 // Get a product by name
 function getProductsByName(req, res) {
     try {
@@ -48,27 +70,6 @@ function getProductsByName(req, res) {
     }
 }
 
-// Add a new product
-function addProduct(req, res) {
-    try {
-        const newProduct = req.body;
-
-        if (!newProduct || !newProduct.name) {
-            return res.status(400).send({ error: "Invalid product data. 'name' is required." });
-        }
-
-        if (repository[newProduct.name]) {
-            return res.status(409).send({ error: `Product "${newProduct.name}" already exists.` });
-        }
-
-        repository[newProduct.name] = newProduct;
-        saveRepository();
-        res.status(201).send({ message: "Product added successfully", product: newProduct });
-    } catch (error) {
-        console.error("Error in addProduct:", error);
-        res.status(500).send({ error: "Internal Server Error" });
-    }
-}
 
 // Update an existing product
 function updateProduct(req, res) {

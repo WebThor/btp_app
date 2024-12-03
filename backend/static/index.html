@@ -16,37 +16,22 @@
 
             // Function to fetch products
             const fetchProducts = () => {
-    fetch("/products", {
-        method: "GET",
-        credentials: "include" // Ensures cookies are sent with the request
-    })
-        .then(response => {
-            if (!response.ok) {
-                // Handle HTTP errors (e.g., 401, 404)
-                return response.text().then(text => {
-                    throw new Error(`HTTP error! Status: ${response.status}, Response: ${text}`);
-                });
-            }
-            const contentType = response.headers.get("Content-Type");
-            if (contentType && contentType.includes("application/json")) {
-                return response.json();
-            } else {
-                // Handle unexpected response types
-                return response.text().then(text => {
-                    throw new Error(`Unexpected response type: ${contentType}, Response: ${text}`);
-                });
-            }
-        })
-        .then(data => {
-            // Update the UI model with the fetched data
-            oProductListModel.setData(data);
-            sap.m.MessageToast.show("Products fetched successfully!");
-        })
-        .catch(error => {
-            sap.m.MessageToast.show("Error fetching products: " + error.message);
-            console.error(error);
-        });
-};
+                fetch("/products", {
+                    method: "GET",
+                    credentials: "include"
+                })
+                    .then(response => {
+                        if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+                        return response.json();
+                    })
+                    .then(data => {
+                        oProductListModel.setData(data);
+                        sap.m.MessageToast.show("Products fetched successfully!");
+                    })
+                    .catch(error => {
+                        sap.m.MessageToast.show("Error fetching products: " + error.message);
+                    });
+            };
 
             // Function to delete a product
             const deleteProduct = (productName) => {
@@ -69,7 +54,8 @@
                 const newProduct = {
                     name: sap.ui.getCore().byId("newProductName").getValue(),
                     description: sap.ui.getCore().byId("newProductDescription").getValue(),
-                    price: parseFloat(sap.ui.getCore().byId("newProductPrice").getValue())
+                    price: parseFloat(sap.ui.getCore().byId("newProductPrice").getValue()),
+                    pictureUrl: sap.ui.getCore().byId("newProductImageUrl")?.getValue() || ""
                 };
 
                 if (!newProduct.name || !newProduct.description || isNaN(newProduct.price)) {
@@ -86,12 +72,20 @@
                     body: JSON.stringify(newProduct)
                 })
                     .then(response => {
-                        if (!response.ok) throw new Error("Failed to add product.");
+                        if (!response.ok) {
+                            return response.json().then(err => {
+                                throw new Error(err.message || "Failed to add product.");
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(() => {
                         sap.m.MessageToast.show("Product added successfully!");
                         fetchProducts();
                     })
                     .catch(error => {
                         sap.m.MessageToast.show("Error adding product: " + error.message);
+                        console.error("Error adding product:", error);
                     });
             };
 
@@ -102,6 +96,7 @@
                     new sap.m.Column({ header: new sap.m.Label({ text: "Name" }) }),
                     new sap.m.Column({ header: new sap.m.Label({ text: "Description" }) }),
                     new sap.m.Column({ header: new sap.m.Label({ text: "Price" }) }),
+                    new sap.m.Column({ header: new sap.m.Label({ text: "Image" }) }),
                     new sap.m.Column({ header: new sap.m.Label({ text: "Actions" }) })
                 ]
             });
@@ -113,6 +108,11 @@
                         new sap.m.Text({ text: "{products>name}" }),
                         new sap.m.Text({ text: "{products>description}" }),
                         new sap.m.Text({ text: "{products>price}" }),
+                        new sap.m.Image({
+                            src: "{products>pictureUrl}",
+                            width: "50px",
+                            height: "50px"
+                        }),
                         new sap.m.Button({
                             text: "Delete",
                             press: function (oEvent) {
@@ -134,6 +134,8 @@
                     new sap.m.Input({ id: "newProductDescription" }),
                     new sap.m.Label({ text: "Price" }),
                     new sap.m.Input({ id: "newProductPrice", type: sap.m.InputType.Number }),
+                    new sap.m.Label({ text: "Image URL" }),
+                    new sap.m.Input({ id: "newProductImageUrl" }),
                     new sap.m.Button({
                         text: "Add Product",
                         press: addProduct
@@ -166,7 +168,6 @@
     </script>
 </head>
 <body class="sapUiBody">
-    <!-- Added missing div for content -->
     <div id="content"></div>
 </body>
 </html>

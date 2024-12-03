@@ -25,6 +25,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Serve static files before authentication middleware
 app.use(express.static(path.join(__dirname, 'static')));
+// Serve images from the resources directory
+app.use('/resources/images', express.static(path.join(__dirname, 'resources/images')));
 
 // Load XSUAA service
 const services = xsenv.getServices({ uaa: { tag: 'xsuaa' } });
