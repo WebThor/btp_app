@@ -3,89 +3,86 @@
 	"tenant-mode": "dedicated",
 	"scopes": [
 	  {
-		"name": "$XSAPPNAME.read",
-		"description": "With this scope, USER can read products."
+		"name": "$XSAPPNAME.force_read",
+		"description": "Allows Jedi to read the Holocrons."
 	  },
 	  {
-		"name": "$XSAPPNAME.edit",
-		"description": "With this scope, USER can edit the website."
+		"name": "$XSAPPNAME.force_edit",
+		"description": "Allows Sith to manipulate the archives."
 	  },
 	  {
-		"name": "$XSAPPNAME.admin",
-		"description": "With this scope, ADMIN can manage the application."
+		"name": "$XSAPPNAME.force_admin",
+		"description": "Allows the Emperor to take control."
 	  },
 	  {
-		"name": "$XSAPPNAME.guest",
-		"description": "With this scope, GUEST can view public data."
+		"name": "$XSAPPNAME.force_guest",
+		"description": "Allows Rebels to access public transmissions."
 	  }
 	],
 	"role-templates": [
 	  {
-		"name": "Viewer",
-		"description": "Role to get the list of products",
+		"name": "jedi_knight",
+		"description": "Access to Jedi knowledge.",
 		"scope-references": [
-		  "$XSAPPNAME.read"
+		  "$XSAPPNAME.force_read"
 		]
 	  },
 	  {
-		"name": "Editor",
-		"description": "Role to edit the website",
+		"name": "sith_lord",
+		"description": "Ability to alter the Jedi archives.",
 		"scope-references": [
-		  "$XSAPPNAME.edit"
+		  "$XSAPPNAME.force_edit"
 		]
 	  },
 	  {
-		"name": "DeathStar",
-		"description": "Be the eval :-)",
+		"name": "emperor",
+		"description": "Full control over the Galactic Empire.",
 		"scope-references": [
-		  "$XSAPPNAME.read",
-		  "$XSAPPNAME.edit",
-		  "$XSAPPNAME.admin"
+		  "$XSAPPNAME.force_admin"
 		]
 	  },
 	  {
-		"name": "Alderaan",
-		"description": "Role for only viewing the evil",
+		"name": "rebel_agent",
+		"description": "Access to public data of the Rebel Alliance.",
 		"scope-references": [
-		  "$XSAPPNAME.guest"
+		  "$XSAPPNAME.force_guest"
 		]
 	  }
 	],
 	"role-collections": [
 	  {
-		"name": "ProductListViewer",
-		"description": "Product List Viewer",
+		"name": "JediOrder",
+		"description": "Members of the Jedi Order with reading privileges.",
 		"role-template-references": [
-		  "$XSAPPNAME.Viewer"
+		  "$XSAPPNAME.jedi_knight"
 		]
 	  },
 	  {
-		"name": "ProductListEditor",
-		"description": "Product List Editor",
+		"name": "SithEmpire",
+		"description": "Sith with the ability to edit archives.",
 		"role-template-references": [
-		  "$XSAPPNAME.Editor"
+		  "$XSAPPNAME.sith_lord"
 		]
 	  },
 	  {
-		"name": "Imperator",
-		"description": "Product List imperator",
+		"name": "ImperialCommand",
+		"description": "Administrators with full control.",
 		"role-template-references": [
-		  "$XSAPPNAME.DeathStar"
+		  "$XSAPPNAME.emperor"
 		]
 	  },
 	  {
-		"name": "AlderaanEmployee",
-		"description": "See the evil",
+		"name": "RebelAlliance",
+		"description": "Rebels with access to public information.",
 		"role-template-references": [
-		  "$XSAPPNAME.Alderaan"
+		  "$XSAPPNAME.rebel_agent"
 		]
 	  }
 	],
-  "oauth2-configuration": 
-    {  
-      "redirect-uris": ["https://*.cfapps.us10-001.hana.ondemand.com/**"]       
-      }
-}
-
-
-
+	"oauth2-configuration": {
+	  "redirect-uris": [
+		"https://*.cfapps.us10-001.hana.ondemand.com/**"
+	  ]
+	}
+  }
+  

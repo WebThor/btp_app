@@ -1,8 +1,16 @@
 {
-    "routes": [{
+  "routes": [
+    {
+      "source": "^/resources/(.*)",
+      "target": "/$1",
+      "localDir": "./resources",
+      "authenticationType": "none"
+    },
+    {
       "source": "^/products",
       "target": "/",
-      "destination": "products-destination"
-    }]
-  }
-  
+      "destination": "products-destination",
+      "authenticationType": "xsuaa"
+    }
+  ]
+}

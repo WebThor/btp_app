@@ -6,7 +6,7 @@ applications:
   random-route: true
   routes:
     - route: backendGroupxx.cfapps.us10-001.hana.ondemand.com
-  path: ./
+  path: ./backend
   buildpacks:
     - nodejs_buildpack  
   timeout: 180
