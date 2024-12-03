@@ -1,92 +1,172 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<meta charset="utf-8">
-	<title>Products App</title>
-	<script src="https://openui5.hana.ondemand.com/resources/sap-ui-core.js"
-		id="sap-ui-bootstrap"
-		data-sap-ui-theme="sap_belize"
-		data-sap-ui-libs="sap.m">
-	</script>
-	<script type="text/javascript">
-		sap.ui.getCore().attachInit(function () {
+    <meta charset="utf-8">
+    <title>Product Management App</title>
+    <script src="https://openui5.hana.ondemand.com/resources/sap-ui-core.js"
+            id="sap-ui-bootstrap"
+            data-sap-ui-theme="sap_belize"
+            data-sap-ui-libs="sap.m,sap.ui.layout">
+    </script>
+    <script type="text/javascript">
+        sap.ui.getCore().attachInit(function () {
+            // Create models for product data
+            const oProductListModel = new sap.ui.model.json.JSONModel();
+            sap.ui.getCore().setModel(oProductListModel, "products");
 
-			// create a mobile app and display page1 initially
-			var app = new sap.m.App("productsApp", {
-				initialPage: "products"
-			});
+            // Function to fetch products
+            const fetchProducts = () => {
+    fetch("/products", {
+        method: "GET",
+        credentials: "include" // Ensures cookies are sent with the request
+    })
+        .then(response => {
+            if (!response.ok) {
+                // Handle HTTP errors (e.g., 401, 404)
+                return response.text().then(text => {
+                    throw new Error(`HTTP error! Status: ${response.status}, Response: ${text}`);
+                });
+            }
+            const contentType = response.headers.get("Content-Type");
+            if (contentType && contentType.includes("application/json")) {
+                return response.json();
+            } else {
+                // Handle unexpected response types
+                return response.text().then(text => {
+                    throw new Error(`Unexpected response type: ${contentType}, Response: ${text}`);
+                });
+            }
+        })
+        .then(data => {
+            // Update the UI model with the fetched data
+            oProductListModel.setData(data);
+            sap.m.MessageToast.show("Products fetched successfully!");
+        })
+        .catch(error => {
+            sap.m.MessageToast.show("Error fetching products: " + error.message);
+            console.error(error);
+        });
+};
 
-			// create model for the list view
-			var oListModel = new sap.ui.model.json.JSONModel();
-			sap.ui.getCore().setModel(oListModel);
-			// TODO read window.location.href
-			var productsUrl = "/products/products"; //  contains path mapping which is specified in xs-app.json
-			if (document.defaultView.location.origin.includes("localhost")) {
-				productsUrl = "/products";
-			}
-			oListModel.loadData(productsUrl);
-			console.log(productsUrl);
-			console.log(oListModel);
+            // Function to delete a product
+            const deleteProduct = (productName) => {
+                fetch(`/products/${productName}`, {
+                    method: "DELETE",
+                    credentials: "include"
+                })
+                    .then(response => {
+                        if (!response.ok) throw new Error("Failed to delete product.");
+                        sap.m.MessageToast.show(`Product "${productName}" deleted successfully!`);
+                        fetchProducts();
+                    })
+                    .catch(error => {
+                        sap.m.MessageToast.show("Error deleting product: " + error.message);
+                    });
+            };
 
-			// create a model for the details view
-			var oDetailsModel = new sap.ui.model.json.JSONModel();
-			sap.ui.getCore().setModel(oDetailsModel, "details");
+            // Function to add a product
+            const addProduct = () => {
+                const newProduct = {
+                    name: sap.ui.getCore().byId("newProductName").getValue(),
+                    description: sap.ui.getCore().byId("newProductDescription").getValue(),
+                    price: parseFloat(sap.ui.getCore().byId("newProductPrice").getValue())
+                };
 
-			// create list item template
-			var productItemTemplate = new sap.m.StandardListItem({
-				title : "{name}",
-				description : "{description}",
-				icon : "{pictureUrl}",
-				type : sap.m.ListType.Navigation,
-				press: function (oEvent) {
-					oSelectedItem = oEvent.oSource.getBindingContext().getObject();
-					oDetailsModel.setData(oSelectedItem);
-	        		app.to("details");
-	        	}
-			});
+                if (!newProduct.name || !newProduct.description || isNaN(newProduct.price)) {
+                    sap.m.MessageToast.show("All fields are required.");
+                    return;
+                }
 
-			// create list
-	        var productList = new sap.m.List({title: "Products"});
-			
-			// Insert the code to increase the memory of the application
+                fetch("/products", {
+                    method: "POST",
+                    credentials: "include",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(newProduct)
+                })
+                    .then(response => {
+                        if (!response.ok) throw new Error("Failed to add product.");
+                        sap.m.MessageToast.show("Product added successfully!");
+                        fetchProducts();
+                    })
+                    .catch(error => {
+                        sap.m.MessageToast.show("Error adding product: " + error.message);
+                    });
+            };
 
-			// bind list with template
-	        productList.bindAggregation("items", "/", productItemTemplate, null, null);
+            // Table for products
+            const oTable = new sap.m.Table({
+                inset: true,
+                columns: [
+                    new sap.m.Column({ header: new sap.m.Label({ text: "Name" }) }),
+                    new sap.m.Column({ header: new sap.m.Label({ text: "Description" }) }),
+                    new sap.m.Column({ header: new sap.m.Label({ text: "Price" }) }),
+                    new sap.m.Column({ header: new sap.m.Label({ text: "Actions" }) })
+                ]
+            });
 
-			// create the list page
-			var products = new sap.m.Page("products", {
-				title : "Products",
-				showNavButton : false,
-				content : productList
-			});
+            oTable.bindItems({
+                path: "products>/",
+                template: new sap.m.ColumnListItem({
+                    cells: [
+                        new sap.m.Text({ text: "{products>name}" }),
+                        new sap.m.Text({ text: "{products>description}" }),
+                        new sap.m.Text({ text: "{products>price}" }),
+                        new sap.m.Button({
+                            text: "Delete",
+                            press: function (oEvent) {
+                                const product = oEvent.getSource().getBindingContext("products").getObject();
+                                deleteProduct(product.name);
+                            }
+                        })
+                    ]
+                })
+            });
 
-			// create the details page with a back button
-			var details = new sap.m.Page("details", {
-				title : "Product Details",
-				showNavButton : true,
-				navButtonPress : function () {
-					// go back to the previous page
-					app.back();
-				},
-				// display the details of the product
-				content : new sap.m.ObjectHeader({
-					title : "{details>/name}",
-					attributes: new sap.m.ObjectAttribute({
-						title : "Product Description",
-						text : "{details>/description}"
-					})
-				})
-			});
-			
-			// add list and details to the app
-			app.addPage(products).addPage(details);
-			
-			// place the app into the HTML document
-			app.placeAt("content");
-		});
-	</script>
+            // Add product form
+            const oAddForm = new sap.ui.layout.form.SimpleForm({
+                editable: true,
+                content: [
+                    new sap.m.Label({ text: "Name" }),
+                    new sap.m.Input({ id: "newProductName" }),
+                    new sap.m.Label({ text: "Description" }),
+                    new sap.m.Input({ id: "newProductDescription" }),
+                    new sap.m.Label({ text: "Price" }),
+                    new sap.m.Input({ id: "newProductPrice", type: sap.m.InputType.Number }),
+                    new sap.m.Button({
+                        text: "Add Product",
+                        press: addProduct
+                    })
+                ]
+            });
+
+            // Main page containing the table and add form
+            const oMainPage = new sap.m.Page({
+                title: "Product Management",
+                content: [
+                    oAddForm,
+                    oTable,
+                    new sap.m.Button({
+                        text: "Refresh Products",
+                        press: fetchProducts
+                    })
+                ]
+            });
+
+            // Initialize the app
+            const app = new sap.m.App("productsApp");
+            app.addPage(oMainPage);
+            app.setInitialPage(oMainPage);
+            app.placeAt("content");
+
+            // Fetch products on load
+            fetchProducts();
+        });
+    </script>
 </head>
-<body class="sapUiBody" id="content">
+<body class="sapUiBody">
+    <!-- Added missing div for content -->
+    <div id="content"></div>
 </body>
 </html>

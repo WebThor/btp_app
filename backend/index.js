@@ -1,33 +1,67 @@
+// index.js
+
 const express = require('express');
-const { getProducts, getProductsByName} = require('./lib/repository');
 const app = express();
-const port = process.env.port || 8080;
-// secure the direct call to the application
+const port = process.env.PORT || 8080;
+
 const passport = require('passport');
-const { JWTStrategy } = require('@sap/xssec');
 const xsenv = require('@sap/xsenv');
+const { JWTStrategy } = require('@sap/xssec');
 
-// XSUAA Middleware
-passport.use(new JWTStrategy(xsenv.getServices({uaa:{tag:'xsuaa'}}).uaa));
+const bodyParser = require('body-parser');
+const path = require('path');
 
+const {
+    getProducts,
+    getProductsByName,
+    addProduct,
+    updateProduct,
+    deleteProduct
+} = require('./lib/repository');
+
+// Middleware
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
+// Serve static files before authentication middleware
+app.use(express.static(path.join(__dirname, 'static')));
+
+// Load XSUAA service
+const services = xsenv.getServices({ uaa: { tag: 'xsuaa' } });
+passport.use(new JWTStrategy(services.uaa));
+
+// Initialize Passport
 app.use(passport.initialize());
-app.use(passport.authenticate('JWT', { session: false }));
 
-app.get('/products', checkReadScope, getProducts);
+// Protect API routes
+app.use('/products', passport.authenticate('JWT', { session: false }));
 
-// Maybe here is an error
-function checkReadScope(req, res, next) {
-	if (!req.authInfo.checkLocalScope('read')) {
-		return next();
-	} else {
-    	console.log('Missing the expected scope');
-    	res.status(403).end('Forbidden');
-	}
+// API Endpoints with scope checks
+app.get('/products', checkScope('force_read'), getProducts);
+app.get('/products/:name', checkScope('force_read'), getProductsByName);
+app.post('/products', checkScope('force_edit'), addProduct);
+app.put('/products/:name', checkScope('force_edit'), updateProduct);
+app.delete('/products/:name', checkScope('force_admin'), deleteProduct);
+
+// Middleware: Check scope
+function checkScope(requiredScope) {
+    return (req, res, next) => {
+        try {
+            if (req.authInfo && req.authInfo.checkLocalScope(requiredScope)) {
+                console.log(`Scope "${requiredScope}" validated.`);
+                next();
+            } else {
+                console.error(`Missing required scope: ${requiredScope}`);
+                res.status(403).send(`Forbidden: Missing Scope (${requiredScope})`);
+            }
+        } catch (error) {
+            console.error("Error in checkScope middleware:", error);
+            res.status(500).send("Internal Server Error in middleware.");
+        }
+    };
 }
 
-// Serve static files
-app.use('/', express.static('static/'));
-
+// Start the backend server
 app.listen(port, () => {
-	console.log('%s listening at %s', app.name, port);
-})
+    console.log(`Backend server is running on port ${port}`);
+});
